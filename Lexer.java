@@ -18,8 +18,53 @@ public class Lexer {
 	public ArrayList<String> tokenize(String input) {
 		ArrayList<String> tokens = new ArrayList<String>();
 
-		// This next line is definitely incorrect!
-		tokens.add(input);
+		String current_token = "";
+		boolean is_comment = false;
+
+		for (int i = 0; i < input.length(); i++) {
+			char current_char = input.charAt(i);
+			if (is_comment) {
+				//  do nothing
+			} else if (current_char == 'λ') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+				tokens.add("λ");
+			} else if (current_char == '.') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+				tokens.add(".");
+			} else if (current_char == '(') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+				tokens.add("(");
+			} else if (current_char == ')') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+				tokens.add(")");
+			} else if (current_char == ' ') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+			} else if (current_char == ';') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
+				is_comment = true;
+			} else {
+				current_token += Character.toString(current_char);
+			}
+		}
+		tokens.add(current_token);
 
 		return tokens;
 	}
