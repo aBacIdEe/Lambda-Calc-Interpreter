@@ -64,7 +64,9 @@ public class Lexer {
 				current_token += Character.toString(current_char);
 			}
 		}
-		tokens.add(current_token);
+		if (current_token.length() > 0) {
+			tokens.add(current_token);
+		}
 
 		return tokens;
 	}
