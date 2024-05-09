@@ -1,7 +1,6 @@
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Arrays;
 
 public class Lexer {
 	
@@ -15,6 +14,8 @@ public class Lexer {
 	 *    [(, \, bat, ., bat, flies, ), cat, \, g, ., joy!, )]
 	 *
 	 */
+	private final String special_characters = "λ\\.()=";
+
 	public ArrayList<String> tokenize(String input) {
 		ArrayList<String> tokens = new ArrayList<String>();
 
@@ -25,35 +26,12 @@ public class Lexer {
 			char current_char = input.charAt(i);
 			if (is_comment) {
 				//  do nothing
-			} else if (current_char == 'λ') {
+			} else if (special_characters.indexOf(current_char) != -1) {
 				if (current_token.length() > 0) {
 					tokens.add(current_token);
 				}
 				current_token = "";
-				tokens.add("λ");
-			} else if (current_char == '.') {
-				if (current_token.length() > 0) {
-					tokens.add(current_token);
-				}
-				current_token = "";
-				tokens.add(".");
-			} else if (current_char == '(') {
-				if (current_token.length() > 0) {
-					tokens.add(current_token);
-				}
-				current_token = "";
-				tokens.add("(");
-			} else if (current_char == ')') {
-				if (current_token.length() > 0) {
-					tokens.add(current_token);
-				}
-				current_token = "";
-				tokens.add(")");
-			} else if (current_char == ' ') {
-				if (current_token.length() > 0) {
-					tokens.add(current_token);
-				}
-				current_token = "";
+				tokens.add(Character.toString(current_char));
 			} else if (current_char == ';') {
 				if (current_token.length() > 0) {
 					tokens.add(current_token);
@@ -70,6 +48,7 @@ public class Lexer {
 
 		return tokens;
 	}
+
 
 
 
