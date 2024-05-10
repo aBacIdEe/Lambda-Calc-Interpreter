@@ -1,6 +1,5 @@
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Lexer {
 	
@@ -32,6 +31,11 @@ public class Lexer {
 				}
 				current_token = "";
 				tokens.add(Character.toString(current_char));
+			} else if (current_char == ' ') {
+				if (current_token.length() > 0) {
+					tokens.add(current_token);
+				}
+				current_token = "";
 			} else if (current_char == ';') {
 				if (current_token.length() > 0) {
 					tokens.add(current_token);

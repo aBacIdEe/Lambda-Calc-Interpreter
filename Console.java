@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,12 +20,14 @@ public class Console {
 		while (! input.equalsIgnoreCase("exit")) {
 			
 			ArrayList<String> tokens = lexer.tokenize(input);
-			System.err.println(tokens);
+			System.out.println(tokens);
+			tokens = parser.preparse(tokens);
+			System.out.println(tokens);
 			String output = "";
 			
 			try {
-				Expression exp = parser.parse(tokens);
-				output = exp.toString();
+				// Node exp = parser.parse(tokens, 0);
+				// output = exp.toString();
 			} catch (Exception e) {
 				System.out.println("Unparsable expression, input was: \"" + input + "\"");
 				input = cleanConsoleInput();
