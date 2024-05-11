@@ -76,8 +76,20 @@ public class Parser {
 
 		ArrayList<String> parens = new ArrayList<String>();
 
+		int extra = 0;
+
 		for (String s: tokens) {
+			if (s.equals("\\")) { // if it's a lambda
+				parens.add("("); // put a left paren first
+				extra++;
+			} else if (s.equals(")") && extra > 0) {
+				parens.add(")");
+				extra--;
+			}
 			parens.add(s);
+		}
+		for (int i = 0; i < extra; i++) {
+			parens.add(")");
 		}
 
 		// removes redundant parens
