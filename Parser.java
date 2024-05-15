@@ -14,16 +14,18 @@ public class Parser {
 	Node pointer;
 
 	public Node parse(ArrayList<String> tokens, int start) {
+		System.out.println("tokens: " + tokens);
 		if (tokens.size() == start) { // base case
 			return pointer;
 		}
+		System.out.println("pointer: " + pointer.toString());
 
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (tokens.get(start).equals("(")) {
 				// find where the closing paren is
 				int end = start;
 				int depth = 0;
-				while (!tokens.get(end).equals(")") && depth >= 0) {
+				while (!tokens.get(end).equals(")") || depth >= 0) {
 					end++;
 					if (tokens.get(end).equals("(")) {
 						depth++;
@@ -90,6 +92,25 @@ public class Parser {
 		}
 		for (int i = 0; i < extra; i++) {
 			parens.add(")");
+		}
+		for (int i = 0; i < parens.size()-2; i++) {
+			if (parens.get(i).equals("\\")) {
+				parens.set(i, parens.get(i) + parens.get(i+1) + parens.get(i+2));
+				parens.remove(i+1);
+				parens.remove(i+1);
+				parens.add(i+1, "(");
+				int end = i;
+				int depth = 0;
+				while (!parens.get(end).equals(")") && depth >= 0) {
+					end++;
+					if (parens.get(end).equals("(")) {
+						depth++;
+					} else if (parens.get(end).equals(")")) {
+						depth--;
+					}
+				}
+				parens.add(end, ")");
+			}
 		}
 
 		// removes redundant parens

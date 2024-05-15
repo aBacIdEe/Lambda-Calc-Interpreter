@@ -28,6 +28,7 @@ public class Console {
 				Node exp = parser.parse(tokens, 0);
 				output = exp.toString();
 			} catch (Exception e) {
+				e.printStackTrace();
 				System.out.println("Unparsable expression, input was: \"" + input + "\"");
 				input = cleanConsoleInput();
 				continue;
