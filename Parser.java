@@ -10,6 +10,20 @@ public class Parser {
 	 */
 
 	Node pointer;
+
+	private int findMatchingParen(ArrayList<String> tokens, int start) {
+		int end = start;
+		int depth = 0;
+		while (!tokens.get(end).equals(")") || depth >= 0) {
+			end++;
+			if (tokens.get(end).equals("(")) {
+				depth++;
+			} else if (tokens.get(end).equals(")")) {
+				depth--;
+			}
+		}
+		return end;
+	}
 	
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
@@ -21,17 +35,7 @@ public class Parser {
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (tokens.get(start).equals("(")) {
 				// find where the closing paren is
-				int end = start;
-				int depth = 0;
-				while (!tokens.get(end).equals(")") || depth >= 0) {
-					end++;
-					if (tokens.get(end).equals("(")) {
-						depth++;
-					} else if (tokens.get(end).equals(")")) {
-						depth--;
-					}
-				}
-				// Node temp = pointer;
+				int end = findMatchingParen(tokens, start);
 				pointer.left = new Node("App");
 				pointer.left.above = pointer;
 				pointer = pointer.left;
@@ -45,16 +49,7 @@ public class Parser {
 		} else if (pointer.right == null) { // if input still available
 			if (tokens.get(start).equals("(")) {
 				// find where the closing paren is
-				int end = start;
-				int depth = 0;
-				while (!tokens.get(end).equals(")") || depth >= 0) {
-					end++;
-					if (tokens.get(end).equals("(")) {
-						depth++;
-					} else if (tokens.get(end).equals(")")) {
-						depth--;
-					}
-				}
+				int end = findMatchingParen(tokens, start);
 				pointer.right = new Node("App");
 				pointer.right.above = pointer;
 				pointer = pointer.right;
@@ -101,7 +96,7 @@ public class Parser {
 			parens.add(s);
 		}
 		parens.add(")");
-		
+
 		for (int i = 0; i < extra; i++) {
 			parens.add(")");
 		}
@@ -111,16 +106,7 @@ public class Parser {
 				parens.remove(i+1);
 				parens.remove(i+1);
 				parens.add(i+1, "(");
-				int end = i;
-				int depth = 0;
-				while (!parens.get(end).equals(")") || depth >= 0) {
-					end++;
-					if (parens.get(end).equals("(")) {
-						depth++;
-					} else if (parens.get(end).equals(")")) {
-						depth--;
-					}
-				}
+				int end = findMatchingParen(parens, i);
 				parens.add(end, ")");
 			}
 		}
