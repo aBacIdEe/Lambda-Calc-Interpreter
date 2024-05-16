@@ -34,10 +34,10 @@ public class Parser {
 	
 
 
-	private void insertAtChildNode(Node child, Node node) {
+	private void insertAtChildNode(Node child, ArrayList<String> tokens) {
 		child.above = pointer;
 		pointer = child;
-		pointer = node;
+		pointer = parse(tokens, 0);
 		pointer = pointer.above;
 	}
 
@@ -54,7 +54,7 @@ public class Parser {
 			if (tokens.get(start).equals("(")) {
 				int end = findMatchingParen(tokens, start);
 				pointer.left = new Node("App");
-				insertAtChildNode(pointer.left, parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0));
+				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				pointer.left = new Node(tokens.get(start));
@@ -64,7 +64,7 @@ public class Parser {
 			if (tokens.get(start).equals("(")) {
 				int end = findMatchingParen(tokens, start);
 				pointer.right = new Node("App");
-				insertAtChildNode(pointer.right, parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0));
+				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				pointer.right = new Node(tokens.get(start));
