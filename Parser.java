@@ -11,6 +11,8 @@ public class Parser {
 
 	Node pointer;
 
+
+
 	private int findMatchingParen(ArrayList<String> tokens, int start) {
 		int end = start;
 		int depth = 0;
@@ -25,12 +27,16 @@ public class Parser {
 		return end;
 	}
 	
+
+
 	private void insertAtChildNode(Node child, ArrayList<String> tokens) {
 		child.above = pointer;
 		pointer = child;
 		pointer = parse(tokens, 0);
 		pointer = pointer.above;
 	}
+
+
 
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
@@ -74,17 +80,17 @@ public class Parser {
 			temp.value = "App";
 			start--; // offset jank to remain on same token
 		}
-		System.out.println("Pointer: " + pointer);
-		System.out.println("Above: " + pointer.above);
+		// System.out.println("Pointer: " + pointer);
+		// System.out.println("Above: " + pointer.above);
 		return parse(tokens, start + 1);
 	}
 
-	public ArrayList<String> preparse(ArrayList<String> tokens) {
 
+
+	private ArrayList<String> handleLambdas(ArrayList<String> tokens) {
 		ArrayList<String> parens = new ArrayList<String>();
 
 		int extra = 0;
-
 		parens.add("(");
 		for (String s: tokens) {
 			if (s.equals("\\")) { // if it's a lambda
@@ -97,7 +103,6 @@ public class Parser {
 			parens.add(s);
 		}
 		parens.add(")");
-
 		for (int i = 0; i < extra; i++) {
 			parens.add(")");
 		}
@@ -112,8 +117,12 @@ public class Parser {
 			}
 		}
 
-		System.out.println(parens);
+		return parens;
+	}
 
+
+
+	private ArrayList<String> removeRedundantParens(ArrayList<String> parens) {
 		// removes redundant parens
 		Stack<ParenPair> paren_stack = new Stack<ParenPair>();
 		paren_stack.add(new ParenPair(-1)); // prevents peeking into empty
@@ -149,7 +158,15 @@ public class Parser {
 				pointer++;
 			}
 		}
-		
+
+		return parens;
+	}
+
+
+
+	public ArrayList<String> preparse(ArrayList<String> tokens) {
+		ArrayList<String> parens = handleLambdas(tokens);
+		parens = removeRedundantParens(parens);
 		return parens;
 	}
 }
