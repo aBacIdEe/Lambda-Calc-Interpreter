@@ -51,6 +51,20 @@ public class Parser {
 		return temp;
 	}
 
+
+
+	public Node reduce(Node home) { // called if a run is deteced
+		// if home.left.left is a lambda, and all exists, then a substituion can be done;
+		// since it's all done directly on the tree, 
+		// need to make sure everything is still points to the correct thing
+
+		// base cases first, as in return the same node if certain conditions are fulfilled
+		// or else performs a recursive call
+		return null;
+	}
+
+
+
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
 		if (tokens.size() == start) { // base case
