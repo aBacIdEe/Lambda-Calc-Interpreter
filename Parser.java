@@ -25,6 +25,13 @@ public class Parser {
 		return end;
 	}
 	
+	private void insertAtChildNode(Node child, ArrayList<String> tokens) {
+		child.above = pointer;
+		pointer = child;
+		pointer = parse(tokens, 0);
+		pointer = pointer.above;
+	}
+
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
 		if (tokens.size() == start) { // base case
@@ -37,10 +44,7 @@ public class Parser {
 				// find where the closing paren is
 				int end = findMatchingParen(tokens, start);
 				pointer.left = new Node("App");
-				pointer.left.above = pointer;
-				pointer = pointer.left;
-				pointer = parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0);
-				pointer = pointer.above;
+				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				pointer.left = new Node(tokens.get(start));
@@ -51,10 +55,7 @@ public class Parser {
 				// find where the closing paren is
 				int end = findMatchingParen(tokens, start);
 				pointer.right = new Node("App");
-				pointer.right.above = pointer;
-				pointer = pointer.right;
-				pointer = parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0);
-				pointer = pointer.above;
+				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				pointer.right = new Node(tokens.get(start));
@@ -148,7 +149,6 @@ public class Parser {
 				pointer++;
 			}
 		}
-		
 		
 		return parens;
 	}
