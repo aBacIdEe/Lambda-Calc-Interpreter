@@ -23,8 +23,10 @@ public class Node {
             return "(" + left.toString() + " " + right.toString() + ")";
         } else if (left != null) {
             return left.toString();
-        } else {
+        } else if (value != null) {
             return value;
+        } else {
+            return "null";
         }
         
     }

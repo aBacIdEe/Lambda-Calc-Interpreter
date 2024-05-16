@@ -9,16 +9,14 @@ public class Parser {
 	 * Turns a set of tokens into an expression.  Comment this back in when you're ready.
 	 */
 
-	// Node root = new Node("Start");
-
 	Node pointer;
-
+	
 	public Node parse(ArrayList<String> tokens, int start) {
-		System.out.println("tokens: " + tokens);
+		// System.out.println("tokens: " + tokens);
 		if (tokens.size() == start) { // base case
 			return pointer;
 		}
-		System.out.println("pointer: " + pointer.toString());
+		// System.out.println("pointer: " + pointer.toString());
 
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (tokens.get(start).equals("(")) {
@@ -33,21 +31,23 @@ public class Parser {
 						depth--;
 					}
 				}
-				Node temp = pointer;
+				// Node temp = pointer;
 				pointer.left = new Node("App");
+				pointer.left.above = pointer;
 				pointer = pointer.left;
 				pointer = parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0);
-				pointer = temp;
+				pointer = pointer.above;
 				start = end;
 			} else { // free variable
 				pointer.left = new Node(tokens.get(start));
+				pointer.left.above = pointer;
 			}
 		} else if (pointer.right == null) { // if input still available
 			if (tokens.get(start).equals("(")) {
 				// find where the closing paren is
 				int end = start;
 				int depth = 0;
-				while (!tokens.get(end).equals(")") && depth >= 0) {
+				while (!tokens.get(end).equals(")") || depth >= 0) {
 					end++;
 					if (tokens.get(end).equals("(")) {
 						depth++;
@@ -55,22 +55,31 @@ public class Parser {
 						depth--;
 					}
 				}
-				Node temp = pointer;
 				pointer.right = new Node("App");
+				pointer.right.above = pointer;
 				pointer = pointer.right;
 				pointer = parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0);
-				pointer = temp;
+				pointer = pointer.above;
 				start = end;
 			} else { // free variable
 				pointer.right = new Node(tokens.get(start));
+				pointer.right.above = pointer;
 			}
-		} else { // make higher node
-			pointer.above = new Node("App"); // make higher node with function that is current
-			Node temp = pointer;
-			pointer = pointer.above; // move up
-			pointer.left = temp;
+		} else { // make higher node to be inserted between current node and above node
+			Node temp = new Node(pointer); // make higher node with function that is current
+			temp.above = pointer.above;
+			if (pointer == pointer.above.left) { // change left side
+				pointer.above.left = temp;
+			} else { // change right side
+				pointer.above.right = temp;
+			}
+			pointer.above = temp;
+			pointer = pointer.above;
+			temp.value = "App";
 			start--; // offset jank to remain on same token
 		}
+		System.out.println("Pointer: " + pointer);
+		System.out.println("Above: " + pointer.above);
 		return parse(tokens, start + 1);
 	}
 

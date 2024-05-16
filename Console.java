@@ -20,11 +20,13 @@ public class Console {
 			
 			ArrayList<String> tokens = lexer.tokenize(input);
 			tokens = parser.preparse(tokens); // cleans input and combines lambdas
+			System.out.print("Preparsed: ");
 			System.out.println(tokens);
 			String output = "";
 			
 			try {
 				parser.pointer = new Node("Start");
+				parser.pointer.above = parser.pointer;
 				Node exp = parser.parse(tokens, 0);
 				output = exp.toString();
 			} catch (Exception e) {
