@@ -58,24 +58,34 @@ public class Parser {
 		}
 		// System.out.println("pointer: " + pointer.toString());
 
+		String token = tokens.get(start);
+
 		if (pointer.left == null) { // add to the left (inherent precedence)
-			if (tokens.get(start).equals("(")) {
+			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
 				pointer.left = new Node("App");
 				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
-				pointer.left = new Node(tokens.get(start));
+				if (reference.containsKey(token)) {
+					pointer.left = reference.get(token);
+				} else {
+					pointer.left = new Node(token);
+				}
 				pointer.left.above = pointer;
 			}
 		} else if (pointer.right == null) { // if input still available
-			if (tokens.get(start).equals("(")) {
+			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
 				pointer.right = new Node("App");
 				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
-				pointer.right = new Node(tokens.get(start));
+				if (reference.containsKey(token)) {
+					pointer.right = reference.get(token);
+				} else {
+					pointer.right = new Node(token);
+				}
 				pointer.right.above = pointer;
 			}
 		} else { // make higher node to be inserted between current node and above node
