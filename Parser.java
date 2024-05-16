@@ -89,6 +89,7 @@ public class Parser {
 
 		int extra = 0;
 
+		parens.add("(");
 		for (String s: tokens) {
 			if (s.equals("\\")) { // if it's a lambda
 				parens.add("("); // put a left paren first
@@ -99,6 +100,8 @@ public class Parser {
 			}
 			parens.add(s);
 		}
+		parens.add(")");
+		
 		for (int i = 0; i < extra; i++) {
 			parens.add(")");
 		}
@@ -110,7 +113,7 @@ public class Parser {
 				parens.add(i+1, "(");
 				int end = i;
 				int depth = 0;
-				while (!parens.get(end).equals(")") && depth >= 0) {
+				while (!parens.get(end).equals(")") || depth >= 0) {
 					end++;
 					if (parens.get(end).equals("(")) {
 						depth++;
@@ -121,6 +124,8 @@ public class Parser {
 				parens.add(end, ")");
 			}
 		}
+
+		System.out.println(parens);
 
 		// removes redundant parens
 		Stack<ParenPair> paren_stack = new Stack<ParenPair>();
