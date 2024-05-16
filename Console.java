@@ -19,21 +19,30 @@ public class Console {
 		while (! input.equalsIgnoreCase("exit")) {
 			
 			ArrayList<String> tokens = lexer.tokenize(input);
-			tokens = parser.preparse(tokens); // cleans input and combines lambdas
-			System.out.print("Preparsed: ");
-			System.out.println(tokens);
 			String output = "";
-			
-			try {
+			if (tokens.get(1).equals("=")) {
 				parser.pointer = new Node("Start");
 				parser.pointer.above = parser.pointer;
-				Node exp = parser.parse(tokens, 0);
-				output = exp.toString();
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("Unparsable expression, input was: \"" + input + "\"");
-				input = cleanConsoleInput();
-				continue;
+				Node exp = parser.storeAndParse(tokens);
+				output = "Added " + exp.toString() + " as " + tokens.get(0);
+			}
+			else {
+				tokens = parser.preparse(tokens); // cleans input and combines lambdas
+				System.out.print("Preparsed: ");
+				System.out.println(tokens);
+				
+				try {
+					parser.pointer = new Node("Start");
+					parser.pointer.above = parser.pointer;
+					Node exp = parser.parse(tokens, 0);
+					output = exp.toString();
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("Unparsable expression, input was: \"" + input + "\"");
+					input = cleanConsoleInput();
+					continue;
+				}
 			}
 			
 			System.out.println(output);

@@ -28,7 +28,6 @@ public class Node {
         } else {
             return "null";
         }
-        
     }
 
 

@@ -14,7 +14,7 @@ public class Parser {
 
 	// have to implement different types of commands and build in some logic to the console.
 	// two nodes can be compared using toStr
-	HashMap<String, Node> reference; 
+	HashMap<String, Node> reference = new HashMap<>();
 
 
 
@@ -41,7 +41,15 @@ public class Parser {
 		pointer = pointer.above;
 	}
 
-
+	public Node storeAndParse(ArrayList<String> tokens) {
+		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(2, tokens.size()));
+		whatToParse = preparse(whatToParse);
+		Node temp = parse(whatToParse, 0);
+		//System.out.println(temp);
+		//System.out.println(tokens.get(0));
+		reference.put(tokens.get(0), temp);
+		return temp;
+	}
 
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
