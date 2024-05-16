@@ -1,6 +1,7 @@
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Stack;
 
 public class Parser {
@@ -10,6 +11,10 @@ public class Parser {
 	 */
 
 	Node pointer;
+
+	// have to implement different types of commands and build in some logic to the console.
+	// two nodes can be compared using toStr
+	HashMap<String, Node> reference; 
 
 
 
@@ -29,10 +34,10 @@ public class Parser {
 	
 
 
-	private void insertAtChildNode(Node child, ArrayList<String> tokens) {
+	private void insertAtChildNode(Node child, Node node) {
 		child.above = pointer;
 		pointer = child;
-		pointer = parse(tokens, 0);
+		pointer = node;
 		pointer = pointer.above;
 	}
 
@@ -47,10 +52,9 @@ public class Parser {
 
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (tokens.get(start).equals("(")) {
-				// find where the closing paren is
 				int end = findMatchingParen(tokens, start);
 				pointer.left = new Node("App");
-				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
+				insertAtChildNode(pointer.left, parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0));
 				start = end;
 			} else { // free variable
 				pointer.left = new Node(tokens.get(start));
@@ -58,10 +62,9 @@ public class Parser {
 			}
 		} else if (pointer.right == null) { // if input still available
 			if (tokens.get(start).equals("(")) {
-				// find where the closing paren is
 				int end = findMatchingParen(tokens, start);
 				pointer.right = new Node("App");
-				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
+				insertAtChildNode(pointer.right, parse(new ArrayList<String>(tokens.subList(start + 1, end)), 0));
 				start = end;
 			} else { // free variable
 				pointer.right = new Node(tokens.get(start));
