@@ -20,7 +20,7 @@ public class Console {
 			
 			ArrayList<String> tokens = lexer.tokenize(input);
 			String output = "";
-			if (tokens.get(1).equals("=")) {
+			if (tokens.size() > 1 && tokens.get(1).equals("=")) {
 				parser.pointer = new Node("Start");
 				parser.pointer.above = parser.pointer;
 				Node exp = parser.storeAndParse(tokens);
