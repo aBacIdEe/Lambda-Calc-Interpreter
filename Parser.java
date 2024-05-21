@@ -2,6 +2,7 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Stack;
 
 public class Parser {
@@ -53,6 +54,16 @@ public class Parser {
 
 
 
+	public Node runAndParse(ArrayList<String> tokens) {
+		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(1, tokens.size()));
+		whatToParse = preparse(whatToParse);
+		Node temp = parse(whatToParse, 0);
+		temp = reduce(temp);
+		return temp;
+	}
+
+
+
 	public Node reduce(Node home) { // called if a run is deteced
 		// if home.left.left is a lambda, and all exists, then a substituion can be done;
 		// since it's all done directly on the tree, 
@@ -60,7 +71,46 @@ public class Parser {
 
 		// base cases first, as in return the same node if certain conditions are fulfilled
 		// or else performs a recursive call
-		return null;
+		if (home.left != null && home.right != null) { // single variable
+			home.left = reduce(home.left); // reduce left as much as possible
+			home.right = reduce(home.right); // reduce right as much as possible
+			if (home.left.left != null && home.left.right != null) { // check for existence
+				if (home.left.left.toString().charAt(0) == '/') { // if it's a lambda
+					if (home.left.right != null) { // wow lambda func exists
+						// time to test for intersection
+						Set<String> leftright = Node.getVarNames(home.left.right);
+						Set<String> right = Node.getVarNames(home.right);
+
+						leftright.retainAll(right);
+
+						String[] intersection = leftright.toArray(new String[leftright.size()]);
+						String predicate = home.left.right.toString();
+						for (String var: intersection) { // replace bound variables in leftright
+							predicate.replaceAll(var, var + "1");
+						}
+						// alpha reduction is done
+						String lambda_term = home.left.left.toString();
+						predicate.replaceAll(lambda_term.substring(1, lambda_term.length() - 1), home.right.toString());
+						// beta reduction is done, time to reparse
+						Lexer lexer = new Lexer();
+						Parser parser = new Parser();
+						parser.pointer = new Node("Start");
+						parser.pointer.above = parser.pointer;
+						home.left.right = parser.parse(parser.preparse(lexer.tokenize(predicate)), 0);
+						// reorganize pointers
+						home.left = home.left.right;
+						home.left.above = home;
+					}
+				}
+			}
+			return home;
+		} else if (home.left != null) { //
+			return reduce(home.left);
+		} else if (home.right != null) {
+			return reduce(home.right);
+		} else {
+			return home;
+		}
 	}
 
 

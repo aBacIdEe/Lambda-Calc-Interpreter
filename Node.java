@@ -1,10 +1,27 @@
+import java.util.HashSet;
+import java.util.Set;
+
 public class Node {
     
     Node left;
     Node right; // (this other)
     Node above;
     String value = "error";
-    
+    Set<String> var_names = new HashSet<String>();
+
+    public static Set<String> getVarNames(Node home) {
+        if (home.left != null) {
+            home.var_names.addAll(getVarNames(home.left));
+        }
+        if (home.right != null) {
+            home.var_names.addAll(getVarNames(home.right));
+        }
+        if (home.left == null && home.right == null) {
+            home.var_names.add(home.value);
+        }
+        return home.var_names;
+    }
+
     public Node(String value) { // free variables
         this.value = value;
     }
