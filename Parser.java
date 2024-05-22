@@ -64,7 +64,7 @@ public class Parser {
 		}
 	}
 
-
+// (\a1. (\r1. (((a r) a1 ) r1)))
 
 	public Node runAndParse(ArrayList<String> tokens) {
 		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(1, tokens.size()));
