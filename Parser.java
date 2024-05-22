@@ -103,14 +103,17 @@ public class Parser {
 						leftright.retainAll(right);
 
 						String[] intersection = leftright.toArray(new String[leftright.size()]);
-						String predicate = home.left.right.toString();
+						String predicate = home.left.toString();
 						for (String var: intersection) { // replace bound variables in leftright
 							predicate = predicate.replace(var, var + "1");
 						}
 						// alpha reduction is done
-						String lambda_term = home.left.left.toString();
-						lambda_term = lambda_term.substring(1, lambda_term.length() - 1);
+						int lindex = 2;
+						int rindex = predicate.indexOf('.');
+						String lambda_term = predicate.substring(lindex, rindex);
+						// lambda_term = lambda_term.substring(1, lambda_term.length() - 1);
 						String free_var = home.right.toString();
+						predicate = predicate.substring(rindex + 2, predicate.length() - 1);
 						predicate = predicate.replace(lambda_term, free_var);
 						// beta reduction is done, time to reparse
 						Lexer lexer = new Lexer();
