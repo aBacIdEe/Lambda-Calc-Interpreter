@@ -73,10 +73,10 @@ public class Parser {
 		// System.out.println(whatToParse);
 		Node temp = parse(whatToParse, 0);
 		temp = reduce(temp);
-		// System.err.println(temp);
+		// System.out.println(temp);
 		while (!temp.toString().equals(reduce(temp).toString())) {
 			temp = reduce(temp);
-			// System.err.println(temp);
+			// System.out.println(temp);
 		}
 		return temp;
 	}
@@ -118,7 +118,7 @@ public class Parser {
 						// beta reduction is done, time to reparse
 						Lexer lexer = new Lexer();
 						Parser parser = new Parser();
-						parser.pointer = new Node("Start");
+						parser.pointer = new Node("");
 						parser.pointer.above = parser.pointer;
 						home.left.right = parser.parse(parser.preparse(lexer.tokenize(predicate)), 0);
 						// reorganize pointers
@@ -150,7 +150,7 @@ public class Parser {
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.left = new Node("App");
+				pointer.left = new Node("");
 				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
@@ -164,7 +164,7 @@ public class Parser {
 		} else if (pointer.right == null) { // if input still available
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.right = new Node("App");
+				pointer.right = new Node("");
 				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
@@ -185,7 +185,7 @@ public class Parser {
 			}
 			pointer.above = temp;
 			pointer = pointer.above;
-			temp.value = "App";
+			temp.value = "";
 			start--; // offset jank to remain on same token
 		}
 		// System.out.println("Pointer: " + pointer);
@@ -271,12 +271,12 @@ public class Parser {
 
 	public ArrayList<String> preparse(ArrayList<String> tokens) {
 		ArrayList<String> parens = handleLambdas(tokens);
-		System.err.println("lambdas handled");
-		System.err.println(parens);
+		//System.out.println("lambdas handled");
+		//System.out.println(parens);
 		parens = removeRedundantParens(parens);
-		System.err.println("extra parens removed");
-		System.err.println(parens);
-		System.err.println();
+		//System.out.println("extra parens removed");
+		//System.out.println(parens);
+		//System.out.println();
 		return parens;
 	}
 }

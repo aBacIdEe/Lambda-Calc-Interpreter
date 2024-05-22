@@ -41,7 +41,12 @@ public class Node {
 
     public String toString() {
         if (left != null && right != null) {
-            return "(" + left.toString() + " " + right.toString() + ")";
+            if (left.toString().charAt(0) == '\\') {
+                return "(" + left.toString() + "" + right.toString() + ")";
+            }
+            else {
+                return "(" + left.toString() + " " + right.toString() + ")";
+            }
         } else if (left != null) {
             return left.toString();
         } else if (value != null) {
