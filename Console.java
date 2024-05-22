@@ -20,17 +20,15 @@ public class Console {
 		while (!input.equalsIgnoreCase("exit")) {
 			ArrayList<String> tokens = lexer.tokenize(input);
 			String output = "";
+			parser.pointer = new Node("Start");
+			parser.pointer.above = parser.pointer;
 			if (tokens.size() >= 2 && tokens.get(0).equals("run")) {
-				parser.pointer = new Node("Start");
-				parser.pointer.above = parser.pointer;
 				exp = parser.runAndParse(tokens);
 				output = exp.toString();
 			} else if (tokens.size() >= 3 && tokens.get(1).equals("=")) {
 				if (parser.reference.containsKey(tokens.get(0))) {
 					output = tokens.get(0) + " is already defined.";
 				} else {
-					parser.pointer = new Node("Start");
-					parser.pointer.above = parser.pointer;
 					exp = parser.storeAndParse(tokens);
 					output = "Added " + exp.toString() + " as " + tokens.get(0);
 				}
@@ -40,8 +38,6 @@ public class Console {
 				System.out.println(tokens);
 				
 				try {
-					parser.pointer = new Node("Start");
-					parser.pointer.above = parser.pointer;
 					exp = parser.parse(tokens, 0);
 					output = exp.toString();
 					

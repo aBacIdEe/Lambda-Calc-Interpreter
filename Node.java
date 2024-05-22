@@ -17,7 +17,11 @@ public class Node {
             home.var_names.addAll(getVarNames(home.right));
         }
         if (home.left == null && home.right == null) {
-            home.var_names.add(home.value);
+            if (home.value.charAt(0) == '\\') {
+                home.var_names.add(home.value.substring(1, home.value.length() - 1));
+            } else {
+                home.var_names.add(home.value);
+            }
         }
         return home.var_names;
     }

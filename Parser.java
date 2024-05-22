@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.Stack;
 
 public class Parser {
 	
@@ -20,17 +19,24 @@ public class Parser {
 
 
 	private int findMatchingParen(ArrayList<String> tokens, int start) {
-		int end = start;
+		int end = start + 1;
 		int depth = 0;
-		while (!tokens.get(end).equals(")") || depth >= 0) {
-			end++;
+		while (!tokens.get(end).equals(")") || depth > 0) {
 			if (tokens.get(end).equals("(")) {
 				depth++;
 			} else if (tokens.get(end).equals(")")) {
 				depth--;
 			}
+			end++;
+			if (end >= tokens.size()) {
+				return tokens.size() - 1;
+			}
 		}
-		return end;
+		if (end != start) {
+			return end;
+		} else {
+			return tokens.size() - 1;
+		}
 	}
 	
 
@@ -42,14 +48,20 @@ public class Parser {
 		pointer = pointer.above;
 	}
 
+	
+
 	public Node storeAndParse(ArrayList<String> tokens) {
 		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(2, tokens.size()));
-		whatToParse = preparse(whatToParse);
-		Node temp = parse(whatToParse, 0);
-		//System.out.println(temp);
-		//System.out.println(tokens.get(0));
-		reference.put(tokens.get(0), temp);
-		return temp;
+		if (tokens.get(2).equals("run")) {
+			Node temp = runAndParse(whatToParse);
+			reference.put(tokens.get(0), temp);
+			return temp;
+		} else {
+			whatToParse = preparse(whatToParse);
+			Node temp = parse(whatToParse, 0);
+			reference.put(tokens.get(0), temp);
+			return temp;
+		}
 	}
 
 
@@ -57,8 +69,15 @@ public class Parser {
 	public Node runAndParse(ArrayList<String> tokens) {
 		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(1, tokens.size()));
 		whatToParse = preparse(whatToParse);
+		// System.out.print("Preparsed: ");
+		// System.out.println(whatToParse);
 		Node temp = parse(whatToParse, 0);
 		temp = reduce(temp);
+		// System.err.println(temp);
+		while (!temp.toString().equals(reduce(temp).toString())) {
+			temp = reduce(temp);
+			// System.err.println(temp);
+		}
 		return temp;
 	}
 
@@ -75,7 +94,7 @@ public class Parser {
 			home.left = reduce(home.left); // reduce left as much as possible
 			home.right = reduce(home.right); // reduce right as much as possible
 			if (home.left.left != null && home.left.right != null) { // check for existence
-				if (home.left.left.toString().charAt(0) == '/') { // if it's a lambda
+				if (home.left.left.toString().charAt(0) == '\\') { // if it's a lambda
 					if (home.left.right != null) { // wow lambda func exists
 						// time to test for intersection
 						Set<String> leftright = Node.getVarNames(home.left.right);
@@ -86,11 +105,13 @@ public class Parser {
 						String[] intersection = leftright.toArray(new String[leftright.size()]);
 						String predicate = home.left.right.toString();
 						for (String var: intersection) { // replace bound variables in leftright
-							predicate.replaceAll(var, var + "1");
+							predicate = predicate.replace(var, var + "1");
 						}
 						// alpha reduction is done
 						String lambda_term = home.left.left.toString();
-						predicate.replaceAll(lambda_term.substring(1, lambda_term.length() - 1), home.right.toString());
+						lambda_term = lambda_term.substring(1, lambda_term.length() - 1);
+						String free_var = home.right.toString();
+						predicate = predicate.replace(lambda_term, free_var);
 						// beta reduction is done, time to reparse
 						Lexer lexer = new Lexer();
 						Parser parser = new Parser();
@@ -98,8 +119,7 @@ public class Parser {
 						parser.pointer.above = parser.pointer;
 						home.left.right = parser.parse(parser.preparse(lexer.tokenize(predicate)), 0);
 						// reorganize pointers
-						home.left = home.left.right;
-						home.left.above = home;
+						home = home.left.right;
 					}
 				}
 			}
@@ -173,85 +193,87 @@ public class Parser {
 
 
 	private ArrayList<String> handleLambdas(ArrayList<String> tokens) {
-		ArrayList<String> parens = new ArrayList<String>();
 
-		int extra = 0;
-		parens.add("(");
-		for (String s: tokens) {
-			if (s.equals("\\")) { // if it's a lambda
-				parens.add("("); // put a left paren first
-				extra++;
-			} else if (s.equals(")") && extra > 0) {
-				parens.add(")");
-				extra--;
+		int index = 0;
+		while (index < tokens.size()) {
+			if (tokens.get(index).equals("\\")) {
+				tokens.add(index, "(");
+				int end = findMatchingParen(tokens, index);
+				if (end == tokens.size() - 1) {
+					tokens.add(")");
+				} else {
+					tokens.add(end, ")");
+				}
+				index++;
 			}
-			parens.add(s);
-		}
-		parens.add(")");
-		for (int i = 0; i < extra; i++) {
-			parens.add(")");
-		}
-		for (int i = 0; i < parens.size()-2; i++) {
-			if (parens.get(i).equals("\\")) {
-				parens.set(i, parens.get(i) + parens.get(i+1) + parens.get(i+2));
-				parens.remove(i+1);
-				parens.remove(i+1);
-				parens.add(i+1, "(");
-				int end = findMatchingParen(parens, i);
-				parens.add(end, ")");
+			index++;
+		};
+		tokens.add(0, "(");
+		tokens.add(")");
+
+		for (int i = 0; i < tokens.size()-2; i++) {
+			if (tokens.get(i).equals("\\")) {
+				tokens.set(i, tokens.get(i) + tokens.get(i+1) + tokens.get(i+2));
+				tokens.remove(i+1);
+				tokens.remove(i+1);
+				tokens.add(i+1, "(");
+				int end = findMatchingParen(tokens, i);
+				tokens.add(end, ")");
 			}
 		}
 
-		return parens;
+		return tokens;
 	}
 
 
 
-	private ArrayList<String> removeRedundantParens(ArrayList<String> parens) {
+	private ArrayList<String> removeRedundantParens(ArrayList<String> tokens) {
 		// removes redundant parens
-		Stack<ParenPair> paren_stack = new Stack<ParenPair>();
-		paren_stack.add(new ParenPair(-1)); // prevents peeking into empty
+		ArrayList<ParenPair> parens = new ArrayList<>();
 		ArrayList<Integer> to_be_removed = new ArrayList<Integer>();
-		for (int i = 0; i < parens.size(); i++) {
-			if (parens.get(i).equals("(")) {
-				paren_stack.add(new ParenPair(i));
-			} else if (parens.get(i).equals(")")) {
-				if (!paren_stack.peek().necessary) {
-					to_be_removed.add(paren_stack.peek().start);
-					to_be_removed.add(i);
-					paren_stack.pop();
-				} else {
-					paren_stack.pop();
-				}
-			} else {
-				paren_stack.peek().necessary = true;
+		for (int i = 0; i < tokens.size(); i++) {
+			if (tokens.get(i).equals("(")) {
+				parens.add(new ParenPair(i));
+				parens.get(parens.size() - 1).end = findMatchingParen(tokens, i);
+			}
+		}
+		parens.remove(0); // removes the outermost one
+		for (ParenPair pair: parens) {
+			if (tokens.get(pair.start - 1).equals("(") && tokens.get(pair.end + 1).equals(")")) {
+				to_be_removed.add(pair.start);
+				to_be_removed.add(pair.end);
 			}
 		}
 		Collections.sort(to_be_removed);
 		for (int i = to_be_removed.size() - 1; i >= 0; i--) {
-			parens.remove((int)to_be_removed.get(i));
+			tokens.remove((int)to_be_removed.get(i));
 		}
 
 		// remove redundant parens in the form ((a)) --> a
 		int pointer = 0;
-		while (pointer < parens.size() - 2) {
-			if (parens.get(pointer).equals("(") && parens.get(pointer + 2).equals(")")) {
-				parens.remove(pointer + 2);
-				parens.remove(pointer);
+		while (pointer < tokens.size() - 2) {
+			if (tokens.get(pointer).equals("(") && tokens.get(pointer + 2).equals(")")) {
+				tokens.remove(pointer + 2);
+				tokens.remove(pointer);
 				pointer = 0;
 			} else {
 				pointer++;
 			}
 		}
 
-		return parens;
+		return tokens;
 	}
 
 
 
 	public ArrayList<String> preparse(ArrayList<String> tokens) {
 		ArrayList<String> parens = handleLambdas(tokens);
+		System.err.println("lambdas handled");
+		System.err.println(parens);
 		parens = removeRedundantParens(parens);
+		System.err.println("extra parens removed");
+		System.err.println(parens);
+		System.err.println();
 		return parens;
 	}
 }
