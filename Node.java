@@ -41,12 +41,10 @@ public class Node {
 
     public String toString() {
         if (left != null && right != null) {
-            if (left.toString().charAt(0) == '\\') {
-                return "(" + left.toString() + "" + right.toString() + ")";
+            if (left.left == null && left.right == null && left.value.charAt(0) == '\\') {
+                return "(" + "λ" + left.toString().substring(1) + "" + right.toString() + ")";
             }
-            else {
-                return "(" + left.toString() + " " + right.toString() + ")";
-            }
+            return "(" + left.toString() + " " + right.toString() + ")";
         } else if (left != null) {
             return left.toString();
         } else if (value != null) {

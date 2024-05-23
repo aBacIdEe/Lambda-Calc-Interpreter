@@ -72,16 +72,18 @@ public class Parser {
 		// System.out.print("Preparsed: ");
 		// System.out.println(whatToParse);
 		Node temp = parse(whatToParse, 0);
-		temp = reduce(temp);
-		// System.out.println(temp);
-		while (!temp.toString().equals(reduce(temp).toString())) {
+		String temp_str = temp.toString();
+		// System.err.println(temp);
+		while (!temp_str.equals(reduce(temp).toString())) {
 			temp = reduce(temp);
-			// System.out.println(temp);
+			temp_str = temp.toString();
+			// System.err.println(temp);
 		}
 		return temp;
 	}
 
-
+// (λf1. (λx. (f1 (((λf. (λx1. x1)) f1) x))))
+// (λf.(λx1.(f x1)))
 
 	public Node reduce(Node home) { // called if a run is deteced
 		// if home.left.left is a lambda, and all exists, then a substituion can be done;
@@ -101,7 +103,6 @@ public class Parser {
 						Set<String> right = Node.getVarNames(home.right);
 
 						leftright.retainAll(right);
-
 						String[] intersection = leftright.toArray(new String[leftright.size()]);
 						String predicate = home.left.toString();
 						for (String var: intersection) { // replace bound variables in leftright
@@ -113,12 +114,12 @@ public class Parser {
 						String lambda_term = predicate.substring(lindex, rindex);
 						// lambda_term = lambda_term.substring(1, lambda_term.length() - 1);
 						String free_var = home.right.toString();
-						predicate = predicate.substring(rindex + 2, predicate.length() - 1);
+						predicate = predicate.substring(rindex + 1, predicate.length() - 1);
 						predicate = predicate.replace(lambda_term, free_var);
 						// beta reduction is done, time to reparse
 						Lexer lexer = new Lexer();
 						Parser parser = new Parser();
-						parser.pointer = new Node("");
+						parser.pointer = new Node("Start");
 						parser.pointer.above = parser.pointer;
 						home.left.right = parser.parse(parser.preparse(lexer.tokenize(predicate)), 0);
 						// reorganize pointers
@@ -150,7 +151,7 @@ public class Parser {
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.left = new Node("");
+				pointer.left = new Node("App");
 				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
@@ -164,7 +165,7 @@ public class Parser {
 		} else if (pointer.right == null) { // if input still available
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.right = new Node("");
+				pointer.right = new Node("App");
 				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
@@ -185,7 +186,7 @@ public class Parser {
 			}
 			pointer.above = temp;
 			pointer = pointer.above;
-			temp.value = "";
+			temp.value = "App";
 			start--; // offset jank to remain on same token
 		}
 		// System.out.println("Pointer: " + pointer);
@@ -199,7 +200,7 @@ public class Parser {
 
 		int index = 0;
 		while (index < tokens.size()) {
-			if (tokens.get(index).equals("\\")) {
+			if (tokens.get(index).equals("\\") || tokens.get(index).equals("λ")) {
 				tokens.add(index, "(");
 				int end = findMatchingParen(tokens, index);
 				if (end == tokens.size() - 1) {
@@ -215,7 +216,7 @@ public class Parser {
 		tokens.add(")");
 
 		for (int i = 0; i < tokens.size()-2; i++) {
-			if (tokens.get(i).equals("\\")) {
+			if (tokens.get(i).equals("\\") || tokens.get(i).equals("λ")) {
 				tokens.set(i, tokens.get(i) + tokens.get(i+1) + tokens.get(i+2));
 				tokens.remove(i+1);
 				tokens.remove(i+1);
@@ -267,16 +268,16 @@ public class Parser {
 		return tokens;
 	}
 
-
+	// run (λf.(λx1.(f ((λx. x) x1))))
 
 	public ArrayList<String> preparse(ArrayList<String> tokens) {
 		ArrayList<String> parens = handleLambdas(tokens);
-		//System.out.println("lambdas handled");
-		//System.out.println(parens);
+		// System.err.println("lambdas handled");
+		// System.err.println(parens);
 		parens = removeRedundantParens(parens);
-		//System.out.println("extra parens removed");
-		//System.out.println(parens);
-		//System.out.println();
+		// System.err.println("extra parens removed");
+		// System.err.println(parens);
+		// System.err.println();
 		return parens;
 	}
 }
