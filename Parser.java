@@ -187,12 +187,24 @@ public class Parser {
 				}
 			}
 		} else {
-			if (home.right != null) {
+			if (home.left != null) {
+				if (home.left != null && home.left.value.equals("λ" + bound + ".")) {
+
+				} else {
+					betaReduce(free, bound, home.left);
+				}
+			}
+			if (home.right != null && home.left == null) {
 				betaReduce(free, bound, home.right);
 			}
-			if (home.left != null) {
-				betaReduce(free, bound, home.left);
-			} 
+			if (home.right != null && home.left != null) {
+				if (home.left != null && home.left.value.equals("λ" + bound + ".")) {
+
+				} else {
+					betaReduce(free, bound, home.right);
+				}
+			}
+
 		}
 	}
 
