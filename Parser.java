@@ -2,6 +2,7 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Parser {
@@ -15,6 +16,14 @@ public class Parser {
 	// have to implement different types of commands and build in some logic to the console.
 	// two nodes can be compared using toStr
 	HashMap<String, Node> reference = new HashMap<>();
+	Set<String> var_names = new HashSet<String>();
+
+
+
+	public Parser() {
+		this.pointer = new Node();
+		this.pointer.above = this.pointer;
+	}
 
 
 
@@ -66,24 +75,136 @@ public class Parser {
 
 // (\a1. (\r1. (((a r) a1 ) r1)))
 
-	public Node runAndParse(ArrayList<String> tokens) {
+	public Node runAndParse(ArrayList<String> tokens) { // reduce is NOT safe
 		ArrayList<String> whatToParse = new ArrayList<>(tokens.subList(1, tokens.size()));
 		whatToParse = preparse(whatToParse);
-		// System.out.print("Preparsed: ");
-		// System.out.println(whatToParse);
-		Node temp = parse(whatToParse, 0);
-		String temp_str = temp.toString();
-		// System.err.println(temp);
-		while (!temp_str.equals(reduce(temp).toString())) {
+		Node original = parse(whatToParse, 0);
+		var_names.clear();
+		original.var_names.clear();
+		Set<String> starting_var_names = Node.getVarNames(original);
+		for (String name: starting_var_names) {
+			var_names.add(name);
+		}
+		Node temp = (Node)original.clone();
+		String temp_str_new = temp.toString();
+		boolean done = false;
+		while (!done) {
+			System.err.print("\\: ");
+			System.err.println(temp_str_new);
+			String temp_str_old = temp_str_new;
+			// Node.findBoundVars(temp);
+			var_names.clear();
 			temp = reduce(temp);
-			temp_str = temp.toString();
-			// System.err.println(temp);
+			temp_str_new = temp.toString();
+			if (temp_str_old.equals(temp_str_new)) {
+				done = true;
+			}
 		}
 		return temp;
 	}
 
-// (λf1. (λx. (f1 (((λf. (λx1. x1)) f1) x))))
-// (λf.(λx1.(f x1)))
+
+
+	public String newVarName(String original) {
+		int added_number = 1;
+		while (var_names.contains(original + String.valueOf(added_number))) {
+			added_number++;
+		}
+		var_names.add(original + String.valueOf(added_number));
+		return original + String.valueOf(added_number);
+	}
+
+
+
+	public void traverseAndReplace(Node home, String token, String new_name, int depth) {
+		// if depth == 0 and the left is a lambda and the value being replaced is the same
+		// then continue traversing at depth = 1
+		if (depth == 0) { // if it sees a lambda
+			if (home.left != null
+			&& !home.left.value.equals("") 
+			&& ((home.left.value.charAt(0) == '\\' || home.left.value.charAt(0) == 'λ'))) {
+				// if it's the correct value
+				if (home.left.value.substring(1, home.left.value.length() - 1).equals(token)) {
+					home.left.value = home.left.value.replace(token, new_name);
+					traverseAndReplace(home.right, token, new_name, depth + 1);
+				} else {
+					traverseAndReplace(home.right, token, new_name, depth);
+				}
+			} else {
+				if (home.left != null) {
+					traverseAndReplace(home.left, token, new_name, depth);
+				}
+				if (home.right != null) {
+					traverseAndReplace(home.right, token, new_name, depth);
+				}
+				if (home.left == null && home.right == null) {
+					if (home.isBound()) {
+						if (home.value.equals(token) ||
+							((home.value.charAt(0) == '\\' || home.value.charAt(0) == 'λ') && home.value.substring(1, home.value.length() - 1).equals(token))) {
+							home.value = home.value.replace(token, new_name);
+						}
+					}
+				}
+			}
+			
+		} else {
+			if (home.left != null
+			&& !home.left.value.equals("") 
+			&& ((home.left.value.charAt(0) == '\\' || home.left.value.charAt(0) == 'λ'))
+			&& home.left.value.substring(1, home.left.value.length() - 1).equals(token)) {
+			// if you see the same thing again but on higher depth, do nothing
+			
+			} else {
+				if (home.left != null) {
+					traverseAndReplace(home.left, token, new_name, depth);
+				}
+				if (home.right != null) {
+					traverseAndReplace(home.right, token, new_name, depth);
+				}
+				if (home.left == null && home.right == null) {
+					if (home.isBound()) {
+						if (home.value.equals(token) ||
+							((home.value.charAt(0) == '\\' || home.value.charAt(0) == 'λ') && home.value.substring(1, home.value.length() - 1).equals(token))) {
+							home.value = home.value.replace(token, new_name);
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+
+	public void betaReduce(Node free, String bound, Node home) { // free is copied each time
+		if (home.left == null & home.right == null) {
+			if (home.value.equals(bound)) {
+				Node temp = (Node)free.clone();
+				temp.above = home.above;
+				if (home.above.left == home) {
+					home.above.left = temp;
+				} else {
+					home.above.right = temp;
+				}
+			}
+		} else {
+			if (home.right != null) {
+				betaReduce(free, bound, home.right);
+			}
+			if (home.left != null) {
+				betaReduce(free, bound, home.left);
+			} 
+		}
+	}
+
+	public boolean isLambda(String value) {
+		if (value.length() > 1) {
+			return value.charAt(0) == '\\' || value.charAt(0) == 'λ' || value.charAt(1) == '\\' || value.charAt(1) == 'λ';
+		}
+		if (value.length() > 0) {
+			return value.charAt(0) == '\\' || value.charAt(0) == 'λ';
+		}
+		return false;
+	}
 
 	public Node reduce(Node home) { // called if a run is deteced
 		// if home.left.left is a lambda, and all exists, then a substituion can be done;
@@ -92,41 +213,68 @@ public class Parser {
 
 		// base cases first, as in return the same node if certain conditions are fulfilled
 		// or else performs a recursive call
+		// var_names = 
 		if (home.left != null && home.right != null) { // single variable
 			home.left = reduce(home.left); // reduce left as much as possible
 			home.right = reduce(home.right); // reduce right as much as possible
-			if (home.left.left != null && home.left.right != null) { // check for existence
-				if (home.left.left.toString().charAt(0) == '\\') { // if it's a lambda
-					if (home.left.right != null) { // wow lambda func exists
-						// time to test for intersection
-						Set<String> leftright = Node.getVarNames(home.left.right);
-						Set<String> right = Node.getVarNames(home.right);
-
-						leftright.retainAll(right);
-						String[] intersection = leftright.toArray(new String[leftright.size()]);
-						String predicate = home.left.toString();
-						for (String var: intersection) { // replace bound variables in leftright
-							predicate = predicate.replace(var, var + "1");
+			// alpha reduce anything first if left is a lambda func
+			if (home.left.left != null && isLambda(home.left.toString())) {
+				home.left.var_names.clear();
+				Set<String> left = Node.getVarNames(home.left);
+				home.right.var_names.clear();
+				Set<String> right = Node.getVarNames(home.right);;
+				left.retainAll(right);
+				String[] intersection = left.toArray(new String[left.size()]);
+				for (String var: intersection) { // replace bound variables in leftright
+						Node top = home;
+						while (top != top.above) {
+							top = top.above;
 						}
-						// alpha reduction is done
-						int lindex = 2;
-						int rindex = predicate.indexOf('.');
-						String lambda_term = predicate.substring(lindex, rindex);
-						// lambda_term = lambda_term.substring(1, lambda_term.length() - 1);
-						String free_var = home.right.toString();
-						predicate = predicate.substring(rindex + 1, predicate.length() - 1);
-						predicate = predicate.replace(lambda_term, free_var);
-						// beta reduction is done, time to reparse
-						Lexer lexer = new Lexer();
-						Parser parser = new Parser();
-						parser.pointer = new Node("Start");
-						parser.pointer.above = parser.pointer;
-						home.left.right = parser.parse(parser.preparse(lexer.tokenize(predicate)), 0);
-						// reorganize pointers
-						home = home.left.right;
-					}
+						String new_name = newVarName(var);
+			
+						// replace a bound var and its children
+						// find usages inside the the new thing being plugged in
+						// find usages in the thing we're plugging into
+						// find parent usage of this var and sub
+						// i.e. (f ... (f x) <-- (\f.f))
+						top.bound_vars.clear();
+						Node.findBoundVars(top);
+						// always do something with the parts subbed in
+						traverseAndReplace(home.right, var, new_name, 0);
+						// do something with the parts subbed into if the parent is the same.
+						// if (home.left != null && home.left.left != null && home.left.left.value.length() > 0 && home.left.left.value.substring(1, home.left.left.value.length() - 1).equals(var)) {
+						traverseAndReplace(top, var, new_name, 0);
+						// }
+						System.err.println("a: " + top.toString());
 				}
 			}
+			// or do beta reduction stuff if possible
+			if (home.left.left != null && home.left.right != null) { // check for existence
+				if (home.left.left.toString().charAt(0) == '\\' || home.left.left.toString().charAt(0) == 'λ') { // if it's a lambda
+					// wow lambda func exists
+					Node top = home;
+					while (top != top.above) {
+						top = top.above;
+					}
+					
+					// String prev = home.toString();
+					// betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
+					// String curr = home.toString();
+					// while (!prev.equals(curr)) {
+					// 	System.err.println(curr);
+					// 	prev = home.toString();
+					// 	betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
+					// 	curr = home.toString();
+					// }
+					betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
+					Node temp = home.left.right;
+					temp.above = home.above;
+					home = temp;
+					System.err.println("b: " + top.toString());			
+				}
+			}
+			
+			
 			return home;
 		} else if (home.left != null) { //
 			return reduce(home.left);
@@ -142,7 +290,11 @@ public class Parser {
 	public Node parse(ArrayList<String> tokens, int start) {
 		// System.out.println("tokens: " + tokens);
 		if (tokens.size() == start) { // base case
-			return pointer;
+			Node ret = pointer;
+			// reset for next thing to be parsed
+			this.pointer = new Node();
+			this.pointer.above = this.pointer;
+			return ret;
 		}
 		// System.out.println("pointer: " + pointer.toString());
 
@@ -151,12 +303,12 @@ public class Parser {
 		if (pointer.left == null) { // add to the left (inherent precedence)
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.left = new Node("App");
+				pointer.left = new Node();
 				insertAtChildNode(pointer.left, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				if (reference.containsKey(token)) {
-					pointer.left = reference.get(token);
+					pointer.left = (Node)reference.get(token).clone();
 				} else {
 					pointer.left = new Node(token);
 				}
@@ -165,12 +317,12 @@ public class Parser {
 		} else if (pointer.right == null) { // if input still available
 			if (token.equals("(")) {
 				int end = findMatchingParen(tokens, start);
-				pointer.right = new Node("App");
+				pointer.right = new Node();
 				insertAtChildNode(pointer.right, new ArrayList<String>(tokens.subList(start + 1, end)));
 				start = end;
 			} else { // free variable
 				if (reference.containsKey(token)) {
-					pointer.right = reference.get(token);
+					pointer.right = (Node)reference.get(token).clone();
 				} else {
 					pointer.right = new Node(token);
 				}
@@ -186,11 +338,8 @@ public class Parser {
 			}
 			pointer.above = temp;
 			pointer = pointer.above;
-			temp.value = "App";
 			start--; // offset jank to remain on same token
 		}
-		// System.out.println("Pointer: " + pointer);
-		// System.out.println("Above: " + pointer.above);
 		return parse(tokens, start + 1);
 	}
 
@@ -268,16 +417,11 @@ public class Parser {
 		return tokens;
 	}
 
-	// run (λf.(λx1.(f ((λx. x) x1))))
+	
 
 	public ArrayList<String> preparse(ArrayList<String> tokens) {
 		ArrayList<String> parens = handleLambdas(tokens);
-		// System.err.println("lambdas handled");
-		// System.err.println(parens);
 		parens = removeRedundantParens(parens);
-		// System.err.println("extra parens removed");
-		// System.err.println(parens);
-		// System.err.println();
 		return parens;
 	}
 }

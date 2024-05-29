@@ -20,8 +20,8 @@ public class Console {
 		while (!input.equalsIgnoreCase("exit")) {
 			ArrayList<String> tokens = lexer.tokenize(input);
 			String output = "";
-			parser.pointer = new Node("Start");
-			parser.pointer.above = parser.pointer;
+			// parser.pointer = new Node();
+			// parser.pointer.above = parser.pointer;
 			if (tokens.size() >= 2 && tokens.get(0).equals("run")) {
 				exp = parser.runAndParse(tokens);
 				output = exp.toString();
