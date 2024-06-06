@@ -7,51 +7,62 @@ import java.util.regex.Pattern;
 
 public class Console {
 	private static Scanner in;
+
+	private static Lexer lexer = new Lexer();
+	private static Parser parser = new Parser();
 	
+	private static String interpretCommand(String input) { // returns output
+		ArrayList<String> tokens = lexer.tokenize(input);
+		String var_name = ""; // only effective if storing
+		boolean should_store = false;
+		boolean should_reduce = false;
+
+		if (tokens.size() >= 3 && tokens.get(1).equals("=")) { // checks for "="
+			if (parser.reference.containsKey(tokens.get(0))) {
+				return tokens.get(0) + " is already defined.";
+			} else {
+				var_name = tokens.get(0);
+				tokens.remove(0);
+				tokens.remove(0);
+				should_store = true;
+			}
+		}
+
+		if (tokens.size() >= 2 && tokens.get(0).equals("run")) { // checks for "run"
+			tokens.remove(0);
+			should_reduce = true;
+		}
+
+		tokens = parser.preparse(tokens);
+		Node root_node = parser.parse(tokens, 0);
+
+		if (should_reduce) {
+			root_node = parser.reduce(root_node);
+		}
+
+		if (should_store) {
+			parser.store(var_name, root_node);
+		}
+
+		String output_expression = root_node.toString();
+
+		if (should_store) {
+			return "Added " + output_expression + " as " + var_name;
+		} else {
+			return output_expression;
+		}
+	}
+
 	public static void main(String[] args) {
 		in = new Scanner (System.in);
 		
-		Lexer lexer = new Lexer();
-		Parser parser = new Parser();
-		
 		String input = cleanConsoleInput();  // see comment
-		Node exp;
-		
 		while (!input.equalsIgnoreCase("exit")) {
-			ArrayList<String> tokens = lexer.tokenize(input);
-			String output = "";
-			// parser.pointer = new Node();
-			// parser.pointer.above = parser.pointer;
-			if (tokens.size() >= 2 && tokens.get(0).equals("run")) {
-				exp = parser.runAndParse(tokens);
-				output = exp.toString();
-			} else if (tokens.size() >= 3 && tokens.get(1).equals("=")) {
-				if (parser.reference.containsKey(tokens.get(0))) {
-					output = tokens.get(0) + " is already defined.";
-				} else {
-					exp = parser.storeAndParse(tokens);
-					output = "Added " + exp.toString() + " as " + tokens.get(0);
-				}
-			} else {
-				tokens = parser.preparse(tokens); // cleans input and combines lambdas
-				// System.out.print("Preparsed: ");
-				// System.out.println(tokens);
-				
-				try {
-					exp = parser.parse(tokens, 0);
-					output = exp.toString();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("Unparsable expression, input was: \"" + input + "\"");
-					input = cleanConsoleInput();
-					continue;
-				}
-			}
-			
+			String output = interpretCommand(input);
 			System.out.println(output);
-			
 			input = cleanConsoleInput();
+			// lexer = new Lexer();
+			// parser = new Parser();
 		}
 		System.out.println("Goodbye!");
 	}
