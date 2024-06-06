@@ -34,7 +34,7 @@ public class Console {
 		}
 
 		tokens = parser.preparse(tokens);
-		Node root_node = parser.parse(tokens, 0);
+		Node root_node = parser.parse(tokens);
 
 		if (should_reduce) {
 			root_node = parser.reduce(root_node);

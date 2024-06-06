@@ -62,7 +62,7 @@ public class Node {
             String new_copy = this.toString();
             Parser parser = new Parser();
             Lexer lexer = new Lexer();
-            return parser.parse(parser.preparse(lexer.tokenize(new_copy)), 0).left; // this line is complete jank, i have no idea why this is the case
+            return parser.parse(parser.preparse(lexer.tokenize(new_copy))).left; // this line is complete jank, i have no idea why this is the case
         } catch (Exception e) {
             return null; 
         }

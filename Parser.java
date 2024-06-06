@@ -87,6 +87,7 @@ public class Parser {
 		home = reduceOnce(home);
 		String newString = home.toString();
 		while (!oldString.equals(newString)) {
+			System.out.println();
 			System.out.println(oldString);
 			oldString = newString;
 			home = reduceOnce(home);
@@ -107,10 +108,12 @@ public class Parser {
 
 		if (home.left != null && home.right != null && home.left.left != null && home.left.right != null && (home.left.left.value.startsWith("\\") || home.left.left.value.startsWith("λ"))) { // suitable for reduction
 			alphaReduce(home);
+			// System.err.println("a: " + home.toString());
 			betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
 			Node temp = home.left.right;
 			temp.above = home.above;
 			home = temp;
+			// System.err.println("b: " + home.toString());
 		}
 
 		return home;
@@ -123,7 +126,7 @@ public class Parser {
 		String[] intersection = left.toArray(new String[left.size()]);
 		for (String var: intersection) { // replace bound variables in leftright
 			String new_name = newVarName(var);
-			traverseAndReplace(home.left.right, var, new_name);
+			traverseAndReplace(home.left, var, new_name); // CHANGE WAS MADE HERE FROM HOME.LEFT.RIGHT to HOME.LEFT
 		}
 	}
 
@@ -139,24 +142,20 @@ public class Parser {
 				}
 			}
 		} else {
-			if (home.left != null) {
-				if (home.left != null && home.left.value.equals("λ" + bound + ".")) {
+			boolean new_bound_not_found = true;
 
-				} else {
+			if (home.left != null && (home.left.value.equals("\\" + bound + ".") || home.left.value.equals("λ" + bound + "."))) {
+				new_bound_not_found = false;
+			}
+
+			if (new_bound_not_found) {
+				if (home.left != null) {
 					betaReduce(free, bound, home.left);
 				}
-			}
-			if (home.right != null && home.left == null) {
-				betaReduce(free, bound, home.right);
-			}
-			if (home.right != null && home.left != null) {
-				if (home.left != null && home.left.value.equals("λ" + bound + ".")) {
-
-				} else {
+				if (home.right != null) {
 					betaReduce(free, bound, home.right);
 				}
 			}
-
 		}
 	}
 
@@ -164,8 +163,13 @@ public class Parser {
 	 * For everything parsing - constructs tree from tokens - labels free/bound vars
 	 */
 
-	public Node parse(ArrayList<String> tokens, int start) { // recursive implementation
-		// System.out.println("tokens: " + tokens);
+	public Node parse(ArrayList<String> tokens) {
+		Node root = parse(tokens, 0);
+		markFreeVars(root, new ArrayList<>());
+		return root;
+	}
+
+	private Node parse(ArrayList<String> tokens, int start) { // recursive implementation
 		if (tokens.size() == start) { // base case - starting index == end of tokens
 			Node temp = pointer;
 			pointer = new Node();
@@ -173,12 +177,7 @@ public class Parser {
 			return temp;
 		}
 
-		boolean has_new_bound = false;
 		String token = tokens.get(start);
-		if (token.startsWith("\\") || token.startsWith("λ")) {
-			has_new_bound = true;
-			bound_vars.add(token.substring(1, token.length() - 1));
-		}
 
 		// Could not find a clean way to refactor this
 
@@ -197,11 +196,6 @@ public class Parser {
 				} else {
 					pointer.left = new Node();
 					pointer.left.value = token;
-					if (bound_vars.contains(token) || token.startsWith("\\") || token.startsWith("λ")) {
-						pointer.left.isFree = false;
-					} else {
-						pointer.left.isFree = true;
-					}
 				}
 				pointer.left.above = pointer;
 			}
@@ -220,11 +214,6 @@ public class Parser {
 				} else {
 					pointer.right = new Node();
 					pointer.right.value = token;
-					if (bound_vars.contains(token) || token.startsWith("\\") || token.startsWith("λ")) {
-						pointer.right.isFree = false;
-					} else {
-						pointer.right.isFree = true;
-					}
 				}
 				pointer.right.above = pointer;
 			}
@@ -243,11 +232,26 @@ public class Parser {
 			start--; // offset jank to remain on same token
 		}
 
-		if (has_new_bound) {
-			bound_vars.remove(bound_vars.size() - 1);
+		return parse(tokens, start + 1);
+	}
+
+	private void markFreeVars(Node home, ArrayList<String> currently_bound) {
+
+		if (home.left != null && (home.left.value.startsWith("\\") || home.left.value.startsWith("λ"))) {
+			currently_bound.add(home.left.value.substring(1, home.left.value.length() - 1));
 		}
 
-		return parse(tokens, start + 1);
+		if (home.left != null) {
+			markFreeVars(home.left, currently_bound);
+		}
+
+		if (home.right != null) {
+			markFreeVars(home.right, currently_bound);
+		}
+
+		if (home.left == null && home.right == null && !currently_bound.contains(home.value) && !(home.value.startsWith("\\") || home.value.startsWith("λ"))) {
+			home.isFree = true;
+		}
 	}
 
 	/*
