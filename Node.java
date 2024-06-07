@@ -57,12 +57,27 @@ public class Node {
         }
     }
 
+    private Node cloneRecurse() {
+        Node home = new Node();
+        if (this.left != null) {
+            home.left = this.left.cloneRecurse();
+            home.left.above = home;
+        }
+        if (this.right != null) {
+            home.right = this.right.cloneRecurse();
+            home.right.above = home;
+        }
+        home.isFree = this.isFree;
+        home.value = this.value;
+
+        return home;
+    }
+
     public Node clone() {  
         try {  
-            String new_copy = this.toString();
-            Parser parser = new Parser();
-            Lexer lexer = new Lexer();
-            return parser.parse(parser.preparse(lexer.tokenize(new_copy))).left; // this line is complete jank, i have no idea why this is the case
+            Node temp = cloneRecurse();
+            temp.above = temp;
+            return temp;
         } catch (Exception e) {
             return null; 
         }
