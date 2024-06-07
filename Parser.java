@@ -112,12 +112,12 @@ public class Parser {
 
 		if (home.left != null && home.right != null && home.left.left != null && home.left.right != null && (home.left.left.value.startsWith("\\") || home.left.left.value.startsWith("λ"))) { // suitable for reduction
 			alphaReduce(home);
-			// System.err.println("a: " + home.toString());
+			System.err.println("post a: " + home.toString());
 			betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
 			Node temp = home.left.right;
 			temp.above = home.above;
 			home = temp;
-			// System.err.println("b: " + home.toString());
+			System.err.println("post b: " + home.toString());
 		}
 
 		return home;
@@ -167,9 +167,29 @@ public class Parser {
 	 * For everything parsing - constructs tree from tokens - labels free/bound vars
 	 */
 
+	private void cleanNodeTree(Node home) {
+		if (home.left != null && home.right == null) {
+			home.left.above = home.above;
+			home = home.left;
+			cleanNodeTree(home);
+		} else if (home.left == null && home.right != null) {
+			home.right.above = home.above;
+			home = home.right;
+			cleanNodeTree(home);
+		} else {
+			if (home.left != null) {
+				cleanNodeTree(home.left);
+			}
+			if (home.right != null) {
+				cleanNodeTree(home.right);
+			}
+		}
+	}
+
 	public Node parse(ArrayList<String> tokens) {
 		Node root = parse(tokens, 0);
 		markFreeVars(root, new ArrayList<>());
+		cleanNodeTree(root);
 		return root;
 	}
 
