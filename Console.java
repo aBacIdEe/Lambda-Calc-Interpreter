@@ -28,6 +28,34 @@ public class Console {
 			}
 		}
 
+		if (tokens.size() == 3 && tokens.get(0).equals("populate")) { // checks for populate x y
+			int firstNum = Integer.parseInt(tokens.get(1));
+			int lastNum = Integer.parseInt(tokens.get(2));
+
+			String firstString = "(\\f.\\x.";
+			for (int i = 0; i < firstNum; i++) {
+				firstString += "(f";
+			}
+			firstString += " x)";
+			for (int i = 0; i < firstNum; i++) {
+				firstString += ")";
+			}
+
+			String prevString = firstString;
+			int prevNum = firstNum;
+
+			for (int i = firstNum; i <= lastNum; i++) { //loop through and increase each number until the end of the range
+				parser.store(String.valueOf(prevNum), parser.parse(parser.preparse(lexer.tokenize(prevString))));
+				
+				prevString = prevString.substring(0, firstNum*2+7) + "(f" + prevString.substring(firstNum*2+7) + ")";
+				//System.out.println("new String: " + prevString);
+				prevNum++;
+
+			}
+
+			return "Populated numbers from " + tokens.get(1) + " to " + tokens.get(2);
+		}
+
 		if (tokens.size() >= 2 && tokens.get(0).equals("run")) { // checks for "run"
 			tokens.remove(0);
 			should_reduce = true;
@@ -49,6 +77,12 @@ public class Console {
 		if (should_store) {
 			return "Added " + output_expression + " as " + var_name;
 		} else {
+			// loop through the list of stored items to see if the output is a stored item
+			for (int i = 0; i < parser.referencedItem.size(); i++) {
+				if (parser.referencedItem.get(i).replace(" ", "").equals(output_expression.replace(" ", "")) && !parser.referenceItem.get(i).equals(var_name)) {
+					output_expression = parser.referenceItem.get(i);
+				}
+			}
 			return output_expression;
 		}
 	}

@@ -15,9 +15,11 @@ public class Parser {
 
 	// have to implement different types of commands and build in some logic to the console.
 	// two nodes can be compared using toStr
-	HashMap<String, Node> reference = new HashMap<>();
-	Set<String> var_names = new HashSet<String>();
-	ArrayList<String> bound_vars = new ArrayList<String>();
+	public HashMap<String, Node> reference = new HashMap<>();
+	public Set<String> var_names = new HashSet<>();
+	public ArrayList<String> bound_vars = new ArrayList<>();
+	public ArrayList<String> referenceItem = new ArrayList<>();
+	public ArrayList<String> referencedItem = new ArrayList<>();
 
 	public Parser() {
 		this.pointer = new Node();
@@ -51,6 +53,8 @@ public class Parser {
 	
 	public void store(String var_name, Node root) {
 		reference.put(var_name, root);
+		referenceItem.add(var_name);
+		referencedItem.add(root.toString());
 	}
 
 	private String newVarName(String original) {
