@@ -17,7 +17,6 @@ public class Parser {
 	// two nodes can be compared using toStr
 	HashMap<String, Node> reference = new HashMap<>();
 	Set<String> var_names = new HashSet<String>();
-	ArrayList<String> bound_vars = new ArrayList<String>();
 
 	public Parser() {
 		this.pointer = new Node();
@@ -108,12 +107,12 @@ public class Parser {
 
 		if (home.left != null && home.right != null && home.left.left != null && home.left.right != null && (home.left.left.value.startsWith("\\") || home.left.left.value.startsWith("λ"))) { // suitable for reduction
 			alphaReduce(home);
-			// System.err.println("a: " + home.toString());
+			System.err.println("post a: " + home.toString());
 			betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
 			Node temp = home.left.right;
 			temp.above = home.above;
 			home = temp;
-			// System.err.println("b: " + home.toString());
+			System.err.println("post b: " + home.toString());
 		}
 
 		return home;
