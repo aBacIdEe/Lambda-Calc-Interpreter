@@ -65,6 +65,7 @@ public class Console {
 		Node root_node = parser.parse(tokens);
 
 		if (should_reduce) {
+			parser.cleanNodeTree(root_node);
 			root_node = parser.reduce(root_node);
 		}
 

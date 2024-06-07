@@ -167,22 +167,19 @@ public class Parser {
 	 * For everything parsing - constructs tree from tokens - labels free/bound vars
 	 */
 
-	private void cleanNodeTree(Node home) {
-		if (home.left != null && home.right == null) {
+	public Node cleanNodeTree(Node home) {
+		if (home.left == null && home.right == null) {
+			return home;
+		} else if (home.left != null && home.right == null) {
 			home.left.above = home.above;
-			home = home.left;
-			cleanNodeTree(home);
+			return cleanNodeTree(home.left);
 		} else if (home.left == null && home.right != null) {
 			home.right.above = home.above;
-			home = home.right;
-			cleanNodeTree(home);
+			return cleanNodeTree(home.right);
 		} else {
-			if (home.left != null) {
-				cleanNodeTree(home.left);
-			}
-			if (home.right != null) {
-				cleanNodeTree(home.right);
-			}
+			home.left = cleanNodeTree(home.left);
+			home.right = cleanNodeTree(home.right);
+			return home;
 		}
 	}
 
