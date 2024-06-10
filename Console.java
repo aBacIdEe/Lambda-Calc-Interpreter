@@ -96,7 +96,9 @@ public class Console {
 		String input = cleanConsoleInput();  // see comment
 		while (!input.equalsIgnoreCase("exit")) {
 			String output = interpretCommand(input);
-			System.out.println(output);
+			if (output.length() > 0) {
+				System.out.println(output);
+			}
 			input = cleanConsoleInput();
 			// lexer = new Lexer();
 			// parser = new Parser();
