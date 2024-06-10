@@ -93,8 +93,8 @@ public class Parser {
 		home = reduceOnce(home);
 		String newString = home.toString();
 		while (!oldString.equals(newString)) {
-			System.out.println();
-			System.out.println(oldString);
+			// System.out.println();
+			// System.out.println(oldString);
 			oldString = newString;
 			home = reduceOnce(home);
 			newString = home.toString();
@@ -114,12 +114,12 @@ public class Parser {
 
 		if (home.left != null && home.right != null && home.left.left != null && home.left.right != null && (home.left.left.value.startsWith("\\") || home.left.left.value.startsWith("λ"))) { // suitable for reduction
 			alphaReduce(home);
-			System.err.println("post a: " + home.toString());
+			// System.err.println("post a: " + home.toString());
 			betaReduce(home.right, home.left.left.value.substring(1, home.left.left.value.length() - 1), home.left.right);
 			Node temp = home.left.right;
 			temp.above = home.above;
 			home = temp;
-			System.err.println("post b: " + home.toString());
+			// System.err.println("post b: " + home.toString());
 		}
 
 		return home;
